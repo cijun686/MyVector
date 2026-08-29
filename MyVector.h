@@ -1,11 +1,9 @@
 #ifndef MYVECTOR_H
-// 如果没有定义过 MYVECTOR_H 这个宏，才往下编译
 #define MYVECTOR_H
 
 #include <utility>
-// 标准库头文件，提供`std::move`移动语义、`std::swap`交换
 #include <cstddef>
-// C++ 标准头文件，提供`size_t`类型（无符号整数，专门用来表示数组下标、内存大小）
+
 template <typename T>
 class MyVector
 {
@@ -14,6 +12,23 @@ private:
     size_t m_size;
     size_t m_cap;
     static constexpr size_t GROW_FACTOR = 2;
+
+    // 扩容：分配新容量，拷贝旧元素，释放旧内存
+    void reallocate(size_t newCap)
+    {
+        if (newCap <= m_cap)
+        {
+            return;
+        }
+        T *newData = new T[newCap];
+        for (size_t i = 0; i < m_size; i++)
+        {
+            newData[i] = m_data[i];
+        }
+        delete[] m_data;
+        m_data = newData;
+        m_cap = newCap;
+    }
 
 public:
     // 默认构造
@@ -26,6 +41,39 @@ public:
     {
         delete[] m_data;
     }
+    // 添加元素到末尾
+    void push_back(const T &val)
+    {
+        if (m_size >= m_cap)
+        {
+            size_t newCap = (m_cap == 0) ? 1 : m_cap * GROW_FACTOR;
+            reallocate(newCap);
+        }
+        m_data[m_size++] = val;
+    }
+
+    // 删除末尾元素
+    void pop_back()
+    {
+
+        if (m_size > 0)
+        {
+            m_data[m_size - 1].~T();
+            --m_size;
+        }
+    }
+    // 运算符重载：下标访问
+
+    // operator [] 非 const 版本
+    T &operator[](size_t idx)
+    {
+        return m_data[idx];
+    }
+    // operator [] const 版本
+    const T &operator[](size_t idx) const
+    {
+        return m_data[idx];
+    }
 
     // 查询接口 const
     size_t size() const
@@ -36,12 +84,10 @@ public:
     {
         return m_cap;
     }
-
     bool empty() const
     {
         return m_size == 0;
     }
-    // 判断容器是否为空。如果有效元素个数等于 0 返回 true
 };
 
 #endif // MYVECTOR_H
