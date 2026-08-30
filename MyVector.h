@@ -13,7 +13,6 @@ private:
     size_t m_cap;
     static constexpr size_t GROW_FACTOR = 2;
 
-    // 扩容：分配新容量，拷贝旧元素，释放旧内存
     void reallocate(size_t newCap)
     {
         if (newCap <= m_cap)
@@ -31,17 +30,18 @@ private:
     }
 
 public:
-    // 默认构造
     MyVector() : m_data(nullptr), m_size(0), m_cap(0)
     {
     }
+    MyVector(const MyVector<T> &other);
+    MyVector<T> &operator=(const MyVector<T> &other);
+    MyVector(MyVector<T> &&other) noexcept;
+    MyVector<T> &operator=(MyVector<T> &&other) noexcept;
 
-    // 析构
     ~MyVector()
     {
         delete[] m_data;
     }
-    // 添加元素到末尾
     void push_back(const T &val)
     {
         if (m_size >= m_cap)
@@ -52,7 +52,6 @@ public:
         m_data[m_size++] = val;
     }
 
-    // 删除末尾元素
     void pop_back()
     {
 
@@ -62,20 +61,17 @@ public:
             --m_size;
         }
     }
-    // 运算符重载：下标访问
 
-    // operator [] 非 const 版本
     T &operator[](size_t idx)
     {
         return m_data[idx];
     }
-    // operator [] const 版本
+
     const T &operator[](size_t idx) const
     {
         return m_data[idx];
     }
 
-    // 查询接口 const
     size_t size() const
     {
         return m_size;
@@ -89,5 +85,66 @@ public:
         return m_size == 0;
     }
 };
+template <typename T>
+MyVector<T>::MyVector(const MyVector<T> &other)
+{
+    m_size = other.size();
+    m_cap = other.capacity();
+    m_data = new T[m_cap];
+    for (size_t i = 0; i < m_size; i++)
+    {
+        m_data[i] = other.m_data[i];
+    }
+}
+
+template <typename T>
+MyVector<T> &MyVector<T>::operator=(const MyVector<T> &other)
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+    delete[] m_data;
+    m_size = other.m_size;
+    m_cap = other.m_cap;
+    m_data = new T[m_cap];
+    for (size_t i = 0; i < m_size; i++)
+    {
+        m_data[i] = other.m_data[i];
+    }
+    return *this;
+}
+
+template <typename T>
+MyVector<T>::MyVector(MyVector<T> &&other) noexcept
+{
+    m_data = other.m_data;
+    m_size = other.m_size;
+    m_cap = other.m_cap;
+
+    other.m_data = nullptr;
+    other.m_size = 0;
+    other.m_cap = 0;
+}
+
+template <typename T>
+MyVector<T> &MyVector<T>::operator=(MyVector<T> &&other) noexcept
+{
+    if (this == &other)
+    {
+        return *this;
+    }
+
+    delete[] m_data;
+    m_data = other.m_data;
+    m_size = other.m_size;
+    m_cap = other.m_cap;
+
+    other.m_data = nullptr;
+    other.m_size = 0;
+    other.m_cap = 0;
+
+    return *this;
+}
 
 #endif // MYVECTOR_H
